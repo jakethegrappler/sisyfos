@@ -3,3 +3,18 @@
     user-select: none;
     overflow: hidden;
 }
+
+body {
+
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+.start-screen {
+    font-family: "Roboto Mono", monospace;
+    text-align: center;
+    padding: 20px;
+    background-color: white;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

@@ -12,7 +12,6 @@ let gameRunning = false;
 let timer;
 let score = 0;
 
-let gameState;
 
 // Hlavní postavička
 const character = {
@@ -46,7 +45,7 @@ function initSteps() {
 }
 
 function drawSteps() {
-    ctx.fillStyle = 'darkred';
+    ctx.fillStyle = '#f4e1d2';
 
     steps.forEach(step => {
         ctx.fillRect(step.x, step.y, stepSize, stepSize);
@@ -82,7 +81,6 @@ function addStep() {
     let lastStep = steps[steps.length - 1];
     let startX = lastStep.x + stepSize;
     let startY = lastStep.y - stepSize * Math.tan(hillAngle);
-
     steps.push({x: startX, y: startY});
 }
 
@@ -90,6 +88,7 @@ function handleKey(event) {
     console.log(event.key);
     const key = event.key;
     if (key === 'Enter') {
+        document.querySelector(".start-screen").style.display = 'none';
         start();
     } else if (key === ' ' && !isFalling) {
         score++;
