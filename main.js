@@ -176,6 +176,7 @@ document.addEventListener("DOMContentLoaded", function() {
             this.gameRunning = false; // Stav, zda hra běží
             this.timer = null; // Timer pro animaci
             this.score = 0; // Skóre hry
+            this.highscore = 0;
 
             // Inicializace postavy, schodů a pozadí
             this.character = new Character(this.canvas.width / 2, this.canvas.height / 2 - this.stepSize, 100, 100);
@@ -195,7 +196,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Elementy pro zobrazení skóre a statusu
             this.scoreElement = document.getElementById('score');
+            this.highscoreElement = document.getElementById('high-score');
             this.statusElement = document.getElementById('status');
+
 
             // Registrace event listenerů
             document.addEventListener("keydown", this.handleKey);
@@ -227,11 +230,17 @@ document.addEventListener("DOMContentLoaded", function() {
             this.updateSteps();
             this.walkAnimation();
             this.updateScore();
+
         }
 
         // Aktualizace skóre
         updateScore() {
             this.scoreElement.textContent = `Score: ${this.score}`;
+        }
+
+        updateHighScore() {
+            this.highscoreElement.textContent = `HighScore: ${this.highscore}`;
+            localStorage.setItem("highScore", JSON.stringify(this.highscore));
         }
 
         // Zpracování stisknutí klávesy
@@ -253,7 +262,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 this.timer = setTimeout(() => {
                     this.isFalling = true;
                     this.animate();
-                }, 250);
+                }, 222);  //Casovani maximalniho intervalu mezi stisknutim mezerniku (obtiznost)
             } else if (key === 'm') {
                 const audio = document.getElementById("audio");
                 audio.muted = !audio.muted;
@@ -274,6 +283,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 this.animationId = requestAnimationFrame(this.tahlefunkce);
             } else if (!this.gameRunning) {
                 this.showRestartScreen(); // Zobrazení restartovací obrazovky po pádu
+                if (this.score > this.highscore){
+                    this.highscore = this.score
+                    this.updateHighScore();
+                }
             }
         }
 
@@ -304,10 +317,10 @@ document.addEventListener("DOMContentLoaded", function() {
         start() {
             this.showGameScreen();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.steps = new Steps(this.stepSize, this.hillAngle, this.canvas.height);  // Reset steps
+            this.steps = new Steps(this.stepSize, this.hillAngle, this.canvas.height);  // Reset schodu
             this.steps.initSteps(this.character.y, this.character.height, this.canvas.width);
             this.isFalling = false;
-            this.score = 0;  // Reset score when game starts
+            this.score = 0;  // Reset skore kdyz zacne nova hra
             this.updateScore();
             this.steps.drawSteps(this.ctx);
             this.walkAnimation();

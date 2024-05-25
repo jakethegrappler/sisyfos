@@ -42,6 +42,26 @@ body {
     transform: translate(-50%, -50%) scale(0.9);
 }
 
+.screen h1:hover {
+    color: #ff6347;
+    transform: scale(1.1);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.screen h1 ~ ul {
+    margin-top: 20px;
+    padding-left: 20px;
+    list-style-type: square;
+}
+
+.screen ul li:nth-child(even) {
+    background-color: rgba(0, 1, 0, 0.2);
+}
+
+.screen ul li:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
 #background {
     position: absolute;
     top: 0;
@@ -61,11 +81,15 @@ body {
     z-index: 1;
 }
 
-#score, #status {
+#score, #status, #high-score {
     position: absolute;
     font-family: 'Roboto Mono', monospace;
     font-size: 20px;
     z-index: 2;
+}
+#high-score {
+    top: 10px;
+    right: 10px;
 }
 
 #score {
@@ -78,11 +102,6 @@ body {
     left: 10px;
 }
 
-/* Animace pro postavu */
-@keyframes moveCharacter {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(10px); }
-}
 
 /* Media Queries */
 @media (max-width: 768px) {
