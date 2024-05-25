@@ -1,153 +1,196 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+class Character {
+    constructor(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.sprite = new Image();
+    }
 
-const hillAngle = 22 * Math.PI / 180; // Sklon 22 stupňů převedený na radiány
-const stepSize = 13; // Velikost jednoho schodu (čtverec)
-const stepSpeed = 0.5; // Rychlost pohybu schodů
-let isFalling = false; // Proměnná pro určení, zda schody padají111
-let animationId; // ID pro animaci
-let gameRunning = false;
-let timer;
-let score = 0;
-
-
-// Hlavní postavička
-const character = {
-    x: canvas.width / 2,
-    y: canvas.height / 2 - stepSize,
-    width: 100,
-    height: 100,
-    sprite : new Image(),
-    setImage(imagePath){
+    setImage(imagePath) {
         this.sprite.src = imagePath;
-    },
-    draw() {
+    }
+
+    draw(ctx) {
         const yOffset = 17; // Posun na ose y pro lepší zarovnání
         ctx.drawImage(this.sprite, this.x - this.width / 2, this.y - this.height / 2 + yOffset, this.width, this.height);
-    },
-
-
-};
-
-// Inicializace a vykreslení schodů
-let steps = []; // Schody jsou uloženy jako pole segmentů
-
-function initSteps() {
-    let startX = -stepSize;
-    let startY = character.y + character.height / 2;
-    while (startX < canvas.width - stepSize) {
-        steps.push({x: startX, y: startY});
-        startX += stepSize;
-        startY -= startX > canvas.width / 2 ? stepSize * Math.tan(hillAngle) : 0;
     }
 }
 
-function drawSteps() {
-    ctx.fillStyle = '#f4e1d2';
+class Steps {
+    constructor(stepSize, hillAngle) {
+        this.steps = [];
+        this.stepSize = stepSize;
+        this.hillAngle = hillAngle;
+    }
 
-    steps.forEach(step => {
-        ctx.fillRect(step.x, step.y, stepSize, stepSize);
-    });
+    initSteps(characterY, characterHeight, canvasWidth) {
+        let startX = -this.stepSize;
+        let startY = characterY + characterHeight / 2;
+        while (startX < canvasWidth - this.stepSize) {
+            this.steps.push({ x: startX, y: startY });
+            startX += this.stepSize;
+            startY -= startX > canvasWidth / 2 ? this.stepSize * Math.tan(this.hillAngle) : 0;
+        }
+    }
+
+    drawSteps(ctx) {
+        ctx.fillStyle = '#f4e1d2';
+        this.steps.forEach(step => {
+            ctx.fillRect(step.x, step.y, this.stepSize, this.stepSize);
+        });
+    }
+
+    updateSteps(isFalling, stepSpeed, hillAngle) {
+        this.steps.forEach(step => {
+            if (isFalling) {
+                step.x += stepSpeed * Math.cos(hillAngle);
+                step.y -= stepSpeed * Math.sin(hillAngle);
+            } else {
+                step.x -= stepSpeed * Math.cos(hillAngle);
+                step.y += stepSpeed * Math.sin(hillAngle);
+            }
+        });
+    }
+
+    addStep(canvasWidth) {
+        let lastStep = this.steps[this.steps.length - 1];
+        let startX = lastStep.x + this.stepSize;
+        let startY = lastStep.y - this.stepSize * Math.tan(this.hillAngle);
+        if (startX < canvasWidth - this.stepSize) {
+            this.steps.push({ x: startX, y: startY });
+        }
+    }
+
+    checkFirstStep(canvasWidth, canvasHeight) {
+        let firstStep = this.steps[0];
+        return firstStep.x >= 0 && firstStep.x <= canvasWidth && firstStep.y >= 0 && firstStep.y <= canvasHeight;
+    }
 }
 
-function updateSteps() {
+class Game {
+    constructor() {
+        this.canvas = document.getElementById('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
 
-    // Aktualizace pozice schodů
-    steps.forEach(step => {
-        if (isFalling) {
-            step.x += stepSpeed * Math.cos(hillAngle);
-            step.y -= stepSpeed * Math.sin(hillAngle);
+        this.hillAngle = 22 * Math.PI / 180;
+        this.stepSize = 13;
+        this.stepSpeed = 0.5;
+        this.isFalling = false;
+        this.animationId = null;
+        this.gameRunning = false;
+        this.timer = null;
+        this.score = 0;
+
+        this.character = new Character(this.canvas.width / 2, this.canvas.height / 2 - this.stepSize, 100, 100);
+        this.steps = new Steps(this.stepSize, this.hillAngle);
+
+        this.handleKey = this.handleKey.bind(this);
+        this.animate = this.animate.bind(this);
+        this.tahlefunkce = this.tahlefunkce.bind(this);
+        this.start = this.start.bind(this);
+
+        this.scoreElement = document.getElementById('score');
+
+        document.addEventListener("keydown", this.handleKey);
+
+        this.initGame();
+    }
+
+    initGame() {
+        this.steps.initSteps(this.character.y, this.character.height, this.canvas.width);
+        this.steps.drawSteps(this.ctx);
+        this.updateSteps();
+        this.walkAnimation();
+        this.updateScore();
+    }
+
+    updateScore() {
+        this.scoreElement.textContent = `Score: ${this.score}`;
+    }
+
+    handleKey(event) {
+        const key = event.key;
+        if (key === 'Enter') {
+            document.querySelector(".start-screen").style.display = 'none';
+            const audio = document.getElementById("audio");
+            const previousMuted = localStorage.getItem("muted");
+            if (previousMuted !== null) {
+                audio.muted = JSON.parse(previousMuted);
+            }
+            audio.play();
+            this.start();
+        } else if (key === ' ' && !this.isFalling) {
+            this.score++;
+            this.updateScore();
+            clearTimeout(this.timer);
+            this.animate();
+            this.timer = setTimeout(() => {
+                this.score = 0;
+                this.updateScore();
+                this.isFalling = true;
+                this.animate();
+            }, 250);
+        } else if (key === 'm') {
+            const audio = document.getElementById("audio");
+            audio.muted = !audio.muted;
+            localStorage.setItem("muted", JSON.stringify(audio.muted));
+        }
+    }
+
+    tahlefunkce() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.steps.addStep(this.canvas.width);
+        this.updateSteps();
+        this.steps.drawSteps(this.ctx);
+        this.walkAnimation();
+        if (this.isFalling) {
+            this.character.draw(this.ctx);
+            this.animationId = requestAnimationFrame(this.tahlefunkce);
+        }
+    }
+
+    walkAnimation() {
+        if (!this.isFalling) {
+            if (this.score % 2 === 0) {
+                this.character.setImage('./images/walk_256-1.png');
+            } else {
+                this.character.setImage('./images/walk_256-2.png');
+            }
         } else {
-            step.x -= stepSpeed * Math.cos(hillAngle);
-            step.y += stepSpeed * Math.sin(hillAngle);
-
+            this.character.setImage("./images/sis-fall-256.png");
         }
-    });
+        this.character.draw(this.ctx);
+    }
 
-    // Kontrola prvního schodu
-    let firstStep = steps[0];
-    if (firstStep.x >= 0 && firstStep.x <= canvas.width && firstStep.y >= 0 && firstStep.y <= canvas.height) {
-        isFalling = false; // Nastavení isFalling na false
-        if (gameRunning) {
-            gameRunning = false;
+    animate() {
+        if (this.gameRunning) {
+            for (let i = 0; i < this.stepSize; i++) {
+                this.animationId = requestAnimationFrame(this.tahlefunkce);
+            }
         }
-        // cancelAnimationFrame(animationId); // Zastavení animace
     }
-}
 
-function addStep() {
-    let lastStep = steps[steps.length - 1];
-    let startX = lastStep.x + stepSize;
-    let startY = lastStep.y - stepSize * Math.tan(hillAngle);
-    steps.push({x: startX, y: startY});
-}
-
-function handleKey(event) {
-    console.log(event.key);
-    const key = event.key;
-    if (key === 'Enter') {
-        document.querySelector(".start-screen").style.display = 'none';
-        start();
-    } else if (key === ' ' && !isFalling) {
-        score++;
-        clearTimeout(timer);
-        animate();
-        timer = setTimeout(function () {
-            console.log(score);
-            score = 0;
-            isFalling = true;
-            animate();
-        }, 250);
+    start() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.steps.drawSteps(this.ctx);
+        this.isFalling = false;
+        this.walkAnimation();
+        this.gameRunning = true;
     }
-}
 
-function tahlefunkce() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    addStep();
-    updateSteps();
-    drawSteps();
-    walkAnimation();
-    if (isFalling) {
-        character.draw();
-        animationId = requestAnimationFrame(tahlefunkce);
-    }
-}
-
-function walkAnimation() {
-    if (!isFalling) {
-        if (score % 2 === 0) {
-            character.setImage('./images/walk_256-1.png');
-        } else {
-            character.setImage('./images/walk_256-2.png');
-        }
-    } else {
-        character.setImage("./images/sis-fall-256.png");
-    }
-    character.draw();
-}
-
-function animate() {
-    if (gameRunning) {
-        for (let i = 0; i < stepSize; i++) {
-            animationId = requestAnimationFrame(tahlefunkce);
+    updateSteps() {
+        this.steps.updateSteps(this.isFalling, this.stepSpeed, this.hillAngle);
+        if (this.steps.checkFirstStep(this.canvas.width, this.canvas.height)) {
+            this.isFalling = false;
+            if (this.gameRunning) {
+                this.gameRunning = false;
+            }
         }
     }
 }
 
-function start() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawSteps();
-    isFalling = false;
-    walkAnimation();
-    gameRunning = true;
-}
-
-initSteps();
-drawSteps();
-updateSteps();
-walkAnimation();
-document.addEventListener("keydown", (event) => {
-    handleKey(event);
-});
+// Inicializace hry
+const game = new Game();

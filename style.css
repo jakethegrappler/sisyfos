@@ -5,10 +5,15 @@
 }
 
 body {
-
+    margin: 0;
+    padding: 0;
     height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background-color: #f0f0f0;
 }
+
 .start-screen {
     font-family: "Roboto Mono", monospace;
     text-align: center;
@@ -17,4 +22,35 @@ body {
     border: 2px solid #ccc;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    width: 90%;
+    margin: 20px;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .start-screen {
+        padding: 15px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .start-screen {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+    body {
+        font-size: 14px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .start-screen {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+    body {
+        font-size: 14px;
+    }
 }
