@@ -14,13 +14,13 @@ body {
     background-color: #f0f0f0;
 }
 
-.start-screen {
+.screen {
     font-family: "Roboto Mono", monospace;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 3; /* Nejvyšší z-index pro zajištění, že je nahoře */
+    z-index: 3;
     background: rgba(255, 255, 255, 0.9);
     padding: 20px;
     border-radius: 10px;
@@ -45,34 +45,33 @@ body {
     z-index: 1;
 }
 
-#score {
+#score, #status {
     position: absolute;
-    top: 10px;
-    left: 10px;
     font-family: 'Roboto Mono', monospace;
     font-size: 20px;
     z-index: 2;
 }
 
-#status {
-    position: absolute;
-    top: 40px;  /* pod skore */
+#score {
+    top: 10px;
     left: 10px;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 20px;
-    z-index: 2;
+}
+
+#status {
+    top: 40px;
+    left: 10px;
 }
 
 /* Media Queries */
 @media (max-width: 768px) {
-    .start-screen {
+    .screen {
         padding: 15px;
         font-size: 0.9rem;
     }
 }
 
 @media (max-width: 480px) {
-    .start-screen {
+    .screen {
         padding: 10px;
         font-size: 0.8rem;
     }
@@ -82,7 +81,7 @@ body {
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-    .start-screen {
+    .screen {
         padding: 10px;
         font-size: 0.8rem;
     }

@@ -76,6 +76,74 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    class Background {
+        constructor(svgElement) {
+            this.svgElement = svgElement;
+            this.polygons = Array.from(svgElement.querySelectorAll('polygon'));
+            this.stepSpeed = 0.5;
+        }
+
+        updateBackground(isFalling) {
+            const direction = isFalling ? -1 : 1;
+            this.polygons.forEach(polygon => {
+                let points = polygon.getAttribute('points').split(' ').map(point => {
+                    let coords = point.split(',').map(Number);
+                    return `${coords[0] - direction * this.stepSpeed},${coords[1]}`;
+                }).join(' ');
+
+                polygon.setAttribute('points', points);
+            });
+
+            this.checkAndAddPolygons(isFalling);
+        }
+
+        checkAndAddPolygons(isFalling) {
+            if (isFalling) {
+                let firstPolygon = this.polygons[0];
+                let firstPoint = firstPolygon.getAttribute('points').split(' ')[0];
+                let firstX = Number(firstPoint.split(',')[0]);
+
+                if (firstX > 0) {
+                    this.addPolygonAtStart();
+                }
+            } else {
+                let lastPolygon = this.polygons[this.polygons.length - 1];
+                let lastPoint = lastPolygon.getAttribute('points').split(' ')[2];
+                let lastX = Number(lastPoint.split(',')[0]);
+
+                if (lastX < window.innerWidth) {
+                    this.addPolygon();
+                }
+            }
+        }
+
+        addPolygon() {
+            let newPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            let lastPolygon = this.polygons[this.polygons.length - 1];
+            let lastPoint = lastPolygon.getAttribute('points').split(' ')[2];
+            let lastX = Number(lastPoint.split(',')[0]);
+
+            let newPoints = `${lastX + 400},600 ${lastX + 700},100 ${lastX + 1000},600`;
+            newPolygon.setAttribute('points', newPoints);
+            newPolygon.setAttribute('fill', '#A9A9A9');
+            this.svgElement.appendChild(newPolygon);
+            this.polygons.push(newPolygon);
+        }
+
+        addPolygonAtStart() {
+            let newPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            let firstPolygon = this.polygons[0];
+            let firstPoint = firstPolygon.getAttribute('points').split(' ')[0];
+            let firstX = Number(firstPoint.split(',')[0]);
+
+            let newPoints = `${firstX - 400},600 ${firstX - 100},100 ${firstX + 200},600`;
+            newPolygon.setAttribute('points', newPoints);
+            newPolygon.setAttribute('fill', '#A9A9A9');
+            this.svgElement.insertBefore(newPolygon, firstPolygon);
+            this.polygons.unshift(newPolygon);
+        }
+    }
+
     class Game {
         constructor() {
             this.canvas = document.getElementById('canvas');
@@ -94,6 +162,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             this.character = new Character(this.canvas.width / 2, this.canvas.height / 2 - this.stepSize, 100, 100);
             this.steps = new Steps(this.stepSize, this.hillAngle, this.canvas.height);
+            this.background = new Background(document.getElementById('background'));
 
             this.handleKey = this.handleKey.bind(this);
             this.animate = this.animate.bind(this);
@@ -101,16 +170,18 @@ document.addEventListener("DOMContentLoaded", function() {
             this.start = this.start.bind(this);
             this.showStartScreen = this.showStartScreen.bind(this);
             this.showGameScreen = this.showGameScreen.bind(this);
+            this.showRestartScreen = this.showRestartScreen.bind(this);
+            this.hideRestartScreen = this.hideRestartScreen.bind(this);
             this.handlePopState = this.handlePopState.bind(this);
 
             this.scoreElement = document.getElementById('score');
-            this.statusElement = document.getElementById('status');  // Přidejte tuto řádku
+            this.statusElement = document.getElementById('status');
 
             document.addEventListener("keydown", this.handleKey);
             window.addEventListener('popstate', this.handlePopState);
 
             this.initGame();
-            this.updateStatus();  // Inicializujte status text
+            this.updateStatus();
             window.addEventListener('online', this.updateStatus.bind(this));
             window.addEventListener('offline', this.updateStatus.bind(this));
 
@@ -141,7 +212,12 @@ document.addEventListener("DOMContentLoaded", function() {
         handleKey(event) {
             const key = event.key;
             if (key === 'Enter') {
-                this.start();
+                if (document.getElementById('restart-screen').style.display === 'block') {
+                    this.hideRestartScreen();
+                    this.start();
+                } else {
+                    this.start();
+                }
                 history.pushState({ screen: "game" }, "Game", "#game");
             } else if (key === ' ' && !this.isFalling) {
                 this.score++;
@@ -165,9 +241,12 @@ document.addEventListener("DOMContentLoaded", function() {
             this.updateSteps();
             this.steps.drawSteps(this.ctx);
             this.walkAnimation();
+            this.background.updateBackground(this.isFalling); // Aktualizace pozadí
             if (this.isFalling) {
                 this.character.draw(this.ctx);
                 this.animationId = requestAnimationFrame(this.tahlefunkce);
+            } else if (!this.gameRunning) {
+                this.showRestartScreen(); // Zobrazení restartovací obrazovky po pádu
             }
         }
 
@@ -211,17 +290,20 @@ document.addEventListener("DOMContentLoaded", function() {
                 this.isFalling = false;
                 if (this.gameRunning) {
                     this.gameRunning = false;
+                    this.showRestartScreen(); // Zobrazení restartovací obrazovky po pádu
                 }
             }
         }
 
         showStartScreen() {
-            document.querySelector(".start-screen").style.display = 'block';
+            document.getElementById('start-screen').style.display = 'block';
+            document.getElementById('restart-screen').style.display = 'none';
             document.getElementById('canvas').style.display = 'none';
         }
 
         showGameScreen() {
-            document.querySelector(".start-screen").style.display = 'none';
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('restart-screen').style.display = 'none';
             document.getElementById('canvas').style.display = 'block';
             const audio = document.getElementById("audio");
             const previousMuted = localStorage.getItem("muted");
@@ -229,6 +311,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 audio.muted = JSON.parse(previousMuted);
             }
             audio.play();
+        }
+
+        showRestartScreen() {
+            document.getElementById('restart-screen').style.display = 'block';
+        }
+
+        hideRestartScreen() {
+            document.getElementById('restart-screen').style.display = 'none';
         }
 
         handlePopState(event) {

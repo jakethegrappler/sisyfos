@@ -2,27 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Danfo&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <title>Sisyfos</title>
-
 </head>
 <body>
 <audio preload="auto" loop id="audio">
     <source src="SISYPHUS.mp3" type="audio/mpeg">
 </audio>
-<section class="start-screen">
+<section id="start-screen" class="screen">
     <h1>Welcome to Sisyphos!</h1>
     <h2><strong>Controls:</strong></h2>
     <ul>
         <li>Smash <strong>SPACE</strong> to push the boulder.</li>
     </ul>
     <p>Press <strong>ENTER</strong> TO PLAY</p>
+</section>
+<section id="restart-screen" class="screen" style="display: none;">
+    <p>Press <strong>ENTER</strong> to start again</p>
 </section>
 <svg id="background" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" preserveAspectRatio="none">
     <polygon points="200,600 500,100 800,600" fill="#A9A9A9" />
@@ -35,8 +36,8 @@
     <polygon points="1400,600 1800,300 2200,600" fill="#A9A9A9" />
 </svg>
 <canvas id="canvas"></canvas>
-<div id="score">Score: 0</div>
-<div id="status" class="status">Status: Not updated</div>
+<div id="score" style="position: absolute; top: 10px; left: 10px; font-family: 'Roboto Mono', monospace; font-size: 20px; z-index: 2;">Score: 0</div>
+<div id="status" style="position: absolute; top: 40px; left: 10px; font-family: 'Roboto Mono', monospace; font-size: 20px; z-index: 2;">Status: Checking...</div>
 <script src="main.js"></script>
 </body>
 </html>
