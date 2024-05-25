@@ -128,8 +128,6 @@ class Game {
             clearTimeout(this.timer);
             this.animate();
             this.timer = setTimeout(() => {
-                this.score = 0;
-                this.updateScore();
                 this.isFalling = true;
                 this.animate();
             }, 250);
@@ -175,8 +173,12 @@ class Game {
 
     start() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.steps.drawSteps(this.ctx);
+        this.steps = new Steps(this.stepSize, this.hillAngle);  // Reset steps
+        this.steps.initSteps(this.character.y, this.character.height, this.canvas.width);
         this.isFalling = false;
+        this.score = 0;  // Reset score when game starts
+        this.updateScore();
+        this.steps.drawSteps(this.ctx);
         this.walkAnimation();
         this.gameRunning = true;
     }
