@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Danfo&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="./images/favicon-32x32.png">
     <link rel="stylesheet" href="./style.css">
     <title>Sisyfos</title>
 </head>
@@ -19,6 +20,7 @@
     <h2><strong>Controls:</strong></h2>
     <ul>
         <li>Smash <strong>SPACE</strong> to push the boulder.</li>
+        <li>Press <strong>M</strong> to mute/unmute music.</li>
     </ul>
     <p>Press <strong>ENTER</strong> TO PLAY</p>
 </section>
@@ -37,8 +39,8 @@
     <polygon points="1400,600 1800,300 2200,600" fill="#A9A9A9" />
 </svg>
 <canvas id="canvas"></canvas>
-<div id="score" style="position: absolute; top: 10px; left: 10px; font-family: 'Roboto Mono', monospace; font-size: 20px; z-index: 2;">Score: 0</div>
-<div id="status" style="position: absolute; top: 40px; left: 10px; font-family: 'Roboto Mono', monospace; font-size: 20px; z-index: 2;">Status: Checking...</div>
+<div id="score">Score: 0</div>
+<div id="status">Status: Checking...</div>
 <script src="./main.js"></script>
 </body>
 </html>

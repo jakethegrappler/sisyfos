@@ -1,32 +1,37 @@
 document.addEventListener("DOMContentLoaded", function() {
+    // Třída pro postavu
     class Character {
         constructor(x, y, width, height) {
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
-            this.sprite = new Image();
+            this.sprite = new Image(); // Obrázek postavy
         }
 
+        // Nastavení obrázku pro postavu
         setImage(imagePath) {
             this.sprite.src = imagePath;
         }
 
+        // Vykreslení postavy na canvas
         draw(ctx) {
             const yOffset = 17; // Posun na ose y pro lepší zarovnání
             ctx.drawImage(this.sprite, this.x - this.width / 2, this.y - this.height / 2 + yOffset, this.width, this.height);
         }
     }
 
+    // Třída pro schody
     class Steps {
         constructor(stepSize, hillAngle, canvasHeight) {
-            this.steps = [];
-            this.stepSize = stepSize;
-            this.hillAngle = hillAngle;
-            this.canvasHeight = canvasHeight;
-            this.strokeWidth = 5; // Nastavení šířky okraje
+            this.steps = []; // Pole schodů
+            this.stepSize = stepSize; // Velikost jednoho schodu
+            this.hillAngle = hillAngle; // Úhel kopce
+            this.canvasHeight = canvasHeight; // Výška canvasu
+            this.strokeWidth = 5; // Nastavení šířky okraje schodů
         }
 
+        // Inicializace schodů
         initSteps(characterY, characterHeight, canvasWidth) {
             let startX = -this.stepSize;
             let startY = characterY + characterHeight / 2;
@@ -37,6 +42,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Vykreslení schodů
         drawSteps(ctx) {
             ctx.fillStyle = '#f4e1d2';
             ctx.strokeStyle = '#f4e1d2';
@@ -49,18 +55,22 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
+        // Aktualizace pozice schodů
         updateSteps(isFalling, stepSpeed, hillAngle) {
             this.steps.forEach(step => {
                 if (isFalling) {
+                    // Posun schodů směrem dolů při pádu
                     step.x += stepSpeed * Math.cos(hillAngle);
                     step.y -= stepSpeed * Math.sin(hillAngle);
                 } else {
+                    // Posun schodů směrem nahoru při tlačení balvanu
                     step.x -= stepSpeed * Math.cos(hillAngle);
                     step.y += stepSpeed * Math.sin(hillAngle);
                 }
             });
         }
 
+        // Přidání nového schodu na konec
         addStep(canvasWidth) {
             let lastStep = this.steps[this.steps.length - 1];
             let startX = lastStep.x + this.stepSize;
@@ -70,21 +80,24 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Kontrola, zda je první schod stále viditelný
         checkFirstStep(canvasWidth, canvasHeight) {
             let firstStep = this.steps[0];
             return firstStep.x >= 0 && firstStep.x <= canvasWidth && firstStep.y >= 0 && firstStep.y <= canvasHeight;
         }
     }
 
+    // Třída pro pozadí
     class Background {
         constructor(svgElement) {
             this.svgElement = svgElement;
             this.polygons = Array.from(svgElement.querySelectorAll('polygon'));
-            this.stepSpeed = 0.5;
+            this.stepSpeed = 0.5; // Rychlost posunu pozadí
         }
 
+        // Aktualizace pozadí
         updateBackground(isFalling) {
-            const direction = isFalling ? -1 : 1;
+            const direction = isFalling ? -1 : 1; // Směr pohybu pozadí
             this.polygons.forEach(polygon => {
                 let points = polygon.getAttribute('points').split(' ').map(point => {
                     let coords = point.split(',').map(Number);
@@ -97,6 +110,7 @@ document.addEventListener("DOMContentLoaded", function() {
             this.checkAndAddPolygons(isFalling);
         }
 
+        // Kontrola a přidání nových polygonů pro pozadí
         checkAndAddPolygons(isFalling) {
             if (isFalling) {
                 let firstPolygon = this.polygons[0];
@@ -117,6 +131,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Přidání nového polygonu na konec
         addPolygon() {
             let newPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             let lastPolygon = this.polygons[this.polygons.length - 1];
@@ -130,6 +145,7 @@ document.addEventListener("DOMContentLoaded", function() {
             this.polygons.push(newPolygon);
         }
 
+        // Přidání nového polygonu na začátek
         addPolygonAtStart() {
             let newPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             let firstPolygon = this.polygons[0];
@@ -144,6 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    // Hlavní třída hry
     class Game {
         constructor() {
             this.canvas = document.getElementById('canvas');
@@ -151,19 +168,21 @@ document.addEventListener("DOMContentLoaded", function() {
             this.canvas.width = window.innerWidth;
             this.canvas.height = window.innerHeight;
 
-            this.hillAngle = 22 * Math.PI / 180;
-            this.stepSize = 13;
-            this.stepSpeed = 0.5;
-            this.isFalling = false;
-            this.animationId = null;
-            this.gameRunning = false;
-            this.timer = null;
-            this.score = 0;
+            this.hillAngle = 22 * Math.PI / 180; // Úhel kopce
+            this.stepSize = 13; // Velikost schodů
+            this.stepSpeed = 0.5; // Rychlost pohybu schodů
+            this.isFalling = false; // Stav, zda postava padá
+            this.animationId = null; // ID animace
+            this.gameRunning = false; // Stav, zda hra běží
+            this.timer = null; // Timer pro animaci
+            this.score = 0; // Skóre hry
 
+            // Inicializace postavy, schodů a pozadí
             this.character = new Character(this.canvas.width / 2, this.canvas.height / 2 - this.stepSize, 100, 100);
             this.steps = new Steps(this.stepSize, this.hillAngle, this.canvas.height);
             this.background = new Background(document.getElementById('background'));
 
+            // Bindování metod pro použití v event listech
             this.handleKey = this.handleKey.bind(this);
             this.animate = this.animate.bind(this);
             this.tahlefunkce = this.tahlefunkce.bind(this);
@@ -174,12 +193,15 @@ document.addEventListener("DOMContentLoaded", function() {
             this.hideRestartScreen = this.hideRestartScreen.bind(this);
             this.handlePopState = this.handlePopState.bind(this);
 
+            // Elementy pro zobrazení skóre a statusu
             this.scoreElement = document.getElementById('score');
             this.statusElement = document.getElementById('status');
 
+            // Registrace event listenerů
             document.addEventListener("keydown", this.handleKey);
             window.addEventListener('popstate', this.handlePopState);
 
+            // Inicializace hry
             this.initGame();
             this.updateStatus();
             window.addEventListener('online', this.updateStatus.bind(this));
@@ -193,10 +215,12 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Aktualizace statusu připojení
         updateStatus() {
             this.statusElement.textContent = navigator.onLine ? "Status: Online" : "Status: Offline";
         }
 
+        // Inicializace hry
         initGame() {
             this.steps.initSteps(this.character.y, this.character.height, this.canvas.width);
             this.steps.drawSteps(this.ctx);
@@ -205,10 +229,12 @@ document.addEventListener("DOMContentLoaded", function() {
             this.updateScore();
         }
 
+        // Aktualizace skóre
         updateScore() {
             this.scoreElement.textContent = `Score: ${this.score}`;
         }
 
+        // Zpracování stisknutí klávesy
         handleKey(event) {
             const key = event.key;
             if (key === 'Enter') {
@@ -235,6 +261,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Hlavní funkce animace
         tahlefunkce() {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.steps.addStep(this.canvas.width);
@@ -250,6 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Animace chůze
         walkAnimation() {
             if (!this.isFalling) {
                 if (this.score % 2 === 0) {
@@ -263,6 +291,7 @@ document.addEventListener("DOMContentLoaded", function() {
             this.character.draw(this.ctx);
         }
 
+        // Funkce pro spuštění animace
         animate() {
             if (this.gameRunning) {
                 for (let i = 0; i < this.stepSize; i++) {
@@ -271,6 +300,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Spuštění hry
         start() {
             this.showGameScreen();
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -284,6 +314,7 @@ document.addEventListener("DOMContentLoaded", function() {
             this.gameRunning = true;
         }
 
+        // Aktualizace schodů
         updateSteps() {
             this.steps.updateSteps(this.isFalling, this.stepSpeed, this.hillAngle);
             if (this.steps.checkFirstStep(this.canvas.width, this.canvas.height)) {
@@ -295,6 +326,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
+        // Zobrazení úvodní obrazovky
         showStartScreen() {
             const startScreen = document.getElementById('start-screen');
             startScreen.classList.add('show');
@@ -304,6 +336,7 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('canvas').style.display = 'none';
         }
 
+        // Zobrazení herní obrazovky
         showGameScreen() {
             const startScreen = document.getElementById('start-screen');
             startScreen.classList.add('hide');
@@ -321,6 +354,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }, 500); // Match the duration of the CSS transition
         }
 
+        // Zobrazení restartovací obrazovky
         showRestartScreen() {
             const restartScreen = document.getElementById('restart-screen');
             restartScreen.classList.add('show');
@@ -328,6 +362,7 @@ document.addEventListener("DOMContentLoaded", function() {
             restartScreen.style.display = 'block';
         }
 
+        // Skrytí restartovací obrazovky
         hideRestartScreen() {
             const restartScreen = document.getElementById('restart-screen');
             restartScreen.classList.add('hide');
@@ -337,6 +372,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }, 500); // Match the duration of the CSS transition
         }
 
+        // Zpracování událostí popstate pro historii prohlížeče
         handlePopState(event) {
             if (event.state && event.state.screen === "game") {
                 this.showGameScreen();
