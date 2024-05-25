@@ -296,29 +296,45 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         showStartScreen() {
-            document.getElementById('start-screen').style.display = 'block';
+            const startScreen = document.getElementById('start-screen');
+            startScreen.classList.add('show');
+            startScreen.classList.remove('hide');
+            startScreen.style.display = 'block';
             document.getElementById('restart-screen').style.display = 'none';
             document.getElementById('canvas').style.display = 'none';
         }
 
         showGameScreen() {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('restart-screen').style.display = 'none';
-            document.getElementById('canvas').style.display = 'block';
-            const audio = document.getElementById("audio");
-            const previousMuted = localStorage.getItem("muted");
-            if (previousMuted !== null) {
-                audio.muted = JSON.parse(previousMuted);
-            }
-            audio.play();
+            const startScreen = document.getElementById('start-screen');
+            startScreen.classList.add('hide');
+            startScreen.classList.remove('show');
+            setTimeout(() => {
+                startScreen.style.display = 'none';
+                document.getElementById('restart-screen').style.display = 'none';
+                document.getElementById('canvas').style.display = 'block';
+                const audio = document.getElementById("audio");
+                const previousMuted = localStorage.getItem("muted");
+                if (previousMuted !== null) {
+                    audio.muted = JSON.parse(previousMuted);
+                }
+                audio.play();
+            }, 500); // Match the duration of the CSS transition
         }
 
         showRestartScreen() {
-            document.getElementById('restart-screen').style.display = 'block';
+            const restartScreen = document.getElementById('restart-screen');
+            restartScreen.classList.add('show');
+            restartScreen.classList.remove('hide');
+            restartScreen.style.display = 'block';
         }
 
         hideRestartScreen() {
-            document.getElementById('restart-screen').style.display = 'none';
+            const restartScreen = document.getElementById('restart-screen');
+            restartScreen.classList.add('hide');
+            restartScreen.classList.remove('show');
+            setTimeout(() => {
+                restartScreen.style.display = 'none';
+            }, 500); // Match the duration of the CSS transition
         }
 
         handlePopState(event) {
@@ -332,4 +348,33 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Inicializace hry
     const game = new Game();
+
+    // Registrace Service Workeru
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+    }
+
+    // Funkce pro aktualizaci stavu připojení
+    function updateOnlineStatus() {
+        const status = navigator.onLine ? "Online" : "Offline";
+        console.log(`Status: ${status}`);
+        const statusElement = document.getElementById('status');
+        if (statusElement) {
+            statusElement.textContent = `Status: ${status}`;
+        }
+    }
+
+    // Posluchače událostí pro změnu stavu připojení
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    updateOnlineStatus();
 });
