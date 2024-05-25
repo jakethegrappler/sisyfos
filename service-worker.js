@@ -1,59 +1,71 @@
-const cacheName = 'sisyphos-game-v1';
-const assets = [
+const CACHE_NAME = 'sisyphos-cache-v1';
+const urlsToCache = [
     '/',
     '/index.html',
     '/style.css',
     '/main.js',
-    '/images/walk_256-1.png',
-    '/images/walk_256-2.png',
-    '/images/sis-fall-256.png',
-    '/SISYPHUS.mp3',
-    'https://fonts.googleapis.com/css2?family=Danfo&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap'
+    '/SISYPHUS.mp3'
 ];
 
 self.addEventListener('install', event => {
-    console.log('[Service Worker] Install');
     event.waitUntil(
-        caches.open(cacheName).then(cache => {
-            console.log('[Service Worker] Caching all: app shell and content');
-            return cache.addAll(assets).catch(err => {
-                console.error('Failed to cache', err);
-            });
-        })
-    );
-});
-
-self.addEventListener('activate', event => {
-    console.log('[Service Worker] Activate');
-    event.waitUntil(
-        caches.keys().then(keyList => {
-            return Promise.all(keyList.map(key => {
-                if (key !== cacheName) {
-                    console.log('[Service Worker] Removing old cache', key);
-                    return caches.delete(key);
-                }
-            }));
-        })
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('Opened cache');
+                return cache.addAll(urlsToCache);
+            })
+            .catch(error => {
+                console.error('Failed to open cache: ', error);
+            })
     );
 });
 
 self.addEventListener('fetch', event => {
-    console.log('[Service Worker] Fetch', event.request.url);
     event.respondWith(
-        caches.match(event.request).then(response => {
-            if (response) {
-                console.log('[Service Worker] Found in cache', event.request.url);
-                return response;
-            }
-            console.log('[Service Worker] Network request for', event.request.url);
-            return fetch(event.request).then(response => {
-                return caches.open(cacheName).then(cache => {
-                    cache.put(event.request.url, response.clone());
+        caches.match(event.request)
+            .then(response => {
+                if (response) {
                     return response;
-                });
-            });
-        }).catch(error => {
-            console.error('[Service Worker] Error fetching and caching new data', error);
+                }
+
+                const fetchRequest = event.request.clone();
+
+                return fetch(fetchRequest).then(
+                    response => {
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+
+                        const responseToCache = response.clone();
+
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+
+                        return response;
+                    }
+                );
+            })
+            .catch(error => {
+                console.error('Fetching failed:', error);
+                throw error;
+            })
+    );
+});
+
+self.addEventListener('activate', event => {
+    const cacheWhitelist = [CACHE_NAME];
+
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
         })
     );
 });

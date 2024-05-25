@@ -16,15 +16,51 @@ body {
 
 .start-screen {
     font-family: "Roboto Mono", monospace;
-    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3; /* Nejvyšší z-index pro zajištění, že je nahoře */
+    background: rgba(255, 255, 255, 0.9);
     padding: 20px;
-    background-color: white;
-    border: 2px solid #ccc;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    width: 90%;
-    margin: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+#background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+#score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 20px;
+    z-index: 2;
+}
+
+#status {
+    position: absolute;
+    top: 40px;  /* pod skore */
+    left: 10px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 20px;
+    z-index: 2;
 }
 
 /* Media Queries */
@@ -54,5 +90,3 @@ body {
         font-size: 14px;
     }
 }
-
-
