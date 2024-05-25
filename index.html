@@ -9,23 +9,34 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Danfo&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <title>Canvas</title>
+    <title>Sisyfos</title>
+
 </head>
 <body>
 <audio preload="auto" loop id="audio">
     <source src="SISYPHUS.mp3" type="audio/mpeg">
 </audio>
 <section class="start-screen">
-    <h1>Welcome to Sysiphos!</h1>
+    <h1>Welcome to Sisyphos!</h1>
     <h2><strong>Controls:</strong></h2>
     <ul>
         <li>Smash <strong>SPACE</strong> to push the boulder.</li>
     </ul>
     <p>Press <strong>ENTER</strong> TO PLAY</p>
 </section>
+<svg id="background" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600" preserveAspectRatio="none">
+    <polygon points="200,600 500,100 800,600" fill="#A9A9A9" />
+    <polygon points="800,600 1100,150 1400,600" fill="#B0B0B0" />
+    <polygon points="0,600 400,200 800,600" fill="#A9A9A9" />
+    <polygon points="400,600 800,150 1200,600" fill="#C0C0C0" />
+    <polygon points="1200,600 1600,200 2000,600" fill="#A9A9A9" />
+    <polygon points="200,600 600,250 1000,600" fill="#B0B0B0" />
+    <polygon points="600,600 1000,200 1400,600" fill="#C0C0C0" />
+    <polygon points="1400,600 1800,300 2200,600" fill="#A9A9A9" />
+</svg>
 <canvas id="canvas"></canvas>
-<div id="score" style="position: absolute; top: 10px; left: 10px; font-family: 'Roboto Mono', monospace; font-size: 20px;">Score: 0</div>
+<div id="score">Score: 0</div>
+<div id="status" class="status">Status: Not updated</div>
 <script src="main.js"></script>
 </body>
 </html>
